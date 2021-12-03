@@ -1,6 +1,7 @@
 package com.assembleia.votacao;
 
 import com.assembleia.votacao.domain.Associado;
+import com.assembleia.votacao.domain.AssociadoVoto;
 import com.assembleia.votacao.domain.Pauta;
 import com.assembleia.votacao.domain.Sessao;
 import com.assembleia.votacao.repositories.AssociadoRepository;
@@ -17,6 +18,8 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @SpringBootApplication
 public class VotacaoApplication {
@@ -62,5 +65,25 @@ class DataLoader implements ApplicationRunner {
         sessao.setDatetimeCriacao(LocalDateTime.now());
         sessao.setTempoDuracao(LocalTime.of(00, 55, 00));
         sessaoRepository.save(sessao);
+
+        AssociadoVoto assoVoto = new AssociadoVoto();
+        assoVoto.setId(1L);
+
+        assoVoto.setAssociado(associado);
+        assoVoto.setSessao(sessao);
+
+        assoVoto.setVoto(String.valueOf(1));
+        assoVoto.setDateTimeVoto(LocalDateTime.now());
+        associdadoVotoRepository.save(assoVoto);
+
+        AssociadoVoto assoVoto2 = new AssociadoVoto();
+        assoVoto2.setId(2L);
+
+        assoVoto2.setAssociado(associado2);
+        assoVoto2.setSessao(sessao);
+
+        assoVoto2.setVoto(String.valueOf(2));
+        assoVoto2.setDateTimeVoto(LocalDateTime.now());
+        associdadoVotoRepository.save(assoVoto2);
     }
 }

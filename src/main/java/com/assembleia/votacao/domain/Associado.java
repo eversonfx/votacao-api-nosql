@@ -19,7 +19,4 @@ public class Associado {
     private String nome;
     private String sobrenome;
     private String cpf;
-
-    @DBRef
-    private List<Sessao> sessaoId;
 }

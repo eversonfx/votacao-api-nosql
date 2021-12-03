@@ -1,11 +1,8 @@
 package com.assembleia.votacao.resources;
 
-import com.assembleia.votacao.domain.AssociadoVoto;
 import com.assembleia.votacao.domain.Pauta;
 import com.assembleia.votacao.dto.PautaResultadoDTO;
 import com.assembleia.votacao.dto.PautaSessaoNewDTO;
-import com.assembleia.votacao.dto.VotoDTO;
-import com.assembleia.votacao.exceptions.DenyVoteException;
 import com.assembleia.votacao.exceptions.ObjectNotFoundException;
 import com.assembleia.votacao.services.PautaService;
 import lombok.AllArgsConstructor;

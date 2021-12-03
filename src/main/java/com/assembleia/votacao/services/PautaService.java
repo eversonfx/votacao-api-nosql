@@ -4,8 +4,6 @@ import com.assembleia.votacao.domain.*;
 import com.assembleia.votacao.dto.PautaResultadoDTO;
 import com.assembleia.votacao.dto.PautaSessaoNewDTO;
 import com.assembleia.votacao.dto.ResponseCheckCPFDTO;
-import com.assembleia.votacao.dto.VotoDTO;
-import com.assembleia.votacao.exceptions.DenyVoteException;
 import com.assembleia.votacao.exceptions.ObjectNotFoundException;
 import com.assembleia.votacao.repositories.AssociadoRepository;
 import com.assembleia.votacao.repositories.AssociadoVotoRepository;
