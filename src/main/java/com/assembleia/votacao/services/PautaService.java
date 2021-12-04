@@ -1,9 +1,14 @@
 package com.assembleia.votacao.services;
 
-import com.assembleia.votacao.domain.*;
+import com.assembleia.votacao.domain.Associado;
+import com.assembleia.votacao.domain.AssociadoVoto;
+import com.assembleia.votacao.domain.Pauta;
+import com.assembleia.votacao.domain.Sessao;
 import com.assembleia.votacao.dto.PautaResultadoDTO;
 import com.assembleia.votacao.dto.PautaSessaoNewDTO;
 import com.assembleia.votacao.dto.ResponseCheckCPFDTO;
+import com.assembleia.votacao.dto.VotoDTO;
+import com.assembleia.votacao.exceptions.DenyVoteException;
 import com.assembleia.votacao.exceptions.ObjectNotFoundException;
 import com.assembleia.votacao.repositories.AssociadoRepository;
 import com.assembleia.votacao.repositories.AssociadoVotoRepository;
@@ -15,9 +20,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
+import javax.validation.constraints.Null;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -27,65 +32,69 @@ public class PautaService {
     private AssociadoRepository associadoRepo;
     private AssociadoVotoRepository assoVotoRepo;
     private SessaoRepository sessaoRepo;
+    private SequenceGeneratorService sequenceGenerator;
 
     public PautaResultadoDTO find(Long id) throws ObjectNotFoundException {
         Pauta pauta;
+        Sessao sessao;
+
+        pauta = pautaRepo.getById(id);
+        sessao = sessaoRepo.getByPauta(pauta);
+
         List<AssociadoVoto> votosAssociados;
-        try {
-            pauta = pautaRepo.getById(id);
-            //votosAssociados = assoVotoRepo.findBySessaoId(pauta.getSessao().getId());
-            votosAssociados = new ArrayList<AssociadoVoto>();
-            long votosSim = votosAssociados.stream().filter(v -> v.getVoto().equals("1")).count();
-            long votosNao = votosAssociados.size() - votosSim;
-            return new PautaResultadoDTO(pauta.getTitulo(), pauta.getSessao().getDatetimeCriacao(), pauta.getSessao().getTempoDuracao(), votosSim, votosNao, votosAssociados.size());
-        } catch (Exception e) {
-            throw new ObjectNotFoundException(String.valueOf(id));
-        }
+        votosAssociados = assoVotoRepo.findBySessaoId(pauta.getId());
+        long votosSim = votosAssociados.stream().filter(v -> v.getVoto().equals("1")).count();
+        long votosNao = votosAssociados.size() - votosSim;
+
+        return new PautaResultadoDTO(sessao.getPauta().getTitulo(), sessao.getDatetimeCriacao(), sessao.getTempoDuracao(), votosSim, votosNao, (votosSim + votosNao));
     }
 
     @Transactional
     public Pauta insert(PautaSessaoNewDTO pautaSessaoNewDTO) throws ObjectNotFoundException {
         Pauta pauta = toModel(pautaSessaoNewDTO);
-        pauta.setId(null);
+        pauta.setId(sequenceGenerator.generateSequence(Pauta.SEQUENCE_NAME));
         pauta = pautaRepo.save(pauta);
 
         //Simplificando a criação da sessão logo após a pauta
         Sessao sessao = new Sessao();
+        sessao.setId(sequenceGenerator.generateSequence(Sessao.SEQUENCE_NAME));
         sessao.setPauta(pauta);
         sessao.setDatetimeCriacao(LocalDateTime.now());
         if (pautaSessaoNewDTO.getTempoDuracao() != null)
             sessao.setTempoDuracao(LocalTime.parse(pautaSessaoNewDTO.getTempoDuracao()));
         sessaoRepo.save(sessao);
-
         return pauta;
     }
 
-    /*public AssociadoVoto computarVoto(VotoDTO votoDTO) throws ObjectNotFoundException, DenyVoteException {
+    public AssociadoVoto computarVoto(VotoDTO votoDTO) throws ObjectNotFoundException, DenyVoteException {
         if (!checkCPF(votoDTO.getAssociadoCPF()))
             throw new DenyVoteException("incapaz de votar");
 
         Associado associado;
         try {
             associado = associadoRepo.findByCpf(votoDTO.getAssociadoCPF());
-        } catch (Exception e) {
-            throw new ObjectNotFoundException(String.valueOf(votoDTO.getAssociadoCPF()));
+            if (associado == null) throw new NullPointerException();
+        } catch (NullPointerException e) {
+            throw new ObjectNotFoundException(votoDTO.getAssociadoCPF());
         }
 
         Sessao sessao;
         try {
-            sessao = pautaRepo.getById(Long.valueOf(votoDTO.getPautaId())).getSessao();
-        } catch (Exception e) {
+            sessao = sessaoRepo.getByPauta(pautaRepo.getById(Long.valueOf(votoDTO.getPautaId())));
+            if (sessao == null) throw new NullPointerException();
+        } catch (NullPointerException e) {
             throw new ObjectNotFoundException(String.valueOf(String.valueOf(votoDTO.getPautaId())));
         }
 
-        /*if (assoVotoRepo.findBySessaoIdAndAssociadoId(sessao.getId(), associado.getId()).size() > 0) {
-            throw new DenyVoteException("Associado já votou nessa sessão");
+        try {
+            List<AssociadoVoto> bySessaoIdAndAssociadoId = assoVotoRepo.findBySessaoIdAndAssociadoId(sessao.getId(), associado.getId());
+            if (bySessaoIdAndAssociadoId.size() > 0)
+                throw new DenyVoteException("Associado já votou nessa sessão");
+        } catch (NullPointerException e) {
+            throw new ObjectNotFoundException("Sem votos");
         }
 
-        //Construção da chave composta com os dados da sessão e do associado
-        AssociadoVotoId assoVotoId = new AssociadoVotoId(sessao.getId(), associado.getId());
-
-        AssociadoVoto newAssociadoVoto = getAssociadoVoto(votoDTO, associado, sessao, assoVotoId);
+        AssociadoVoto newAssociadoVoto = getAssociadoVoto(votoDTO, associado, sessao);
 
         //Verificação do tempo limite para computar votos
         var horario = sessao.getDatetimeCriacao();
@@ -98,12 +107,14 @@ public class PautaService {
         else throw new DenyVoteException("tempo excedido para votar nessa sessão");
     }
 
-    private AssociadoVoto getAssociadoVoto(VotoDTO votoDTO, Associado associado, Sessao sessao, AssociadoVotoId assoId) {
+    private AssociadoVoto getAssociadoVoto(VotoDTO votoDTO, Associado associado, Sessao sessao) {
         AssociadoVoto newAssociadoVoto = new AssociadoVoto();
-        newAssociadoVoto.setId(assoId);
+        newAssociadoVoto.setId(sequenceGenerator.generateSequence(AssociadoVoto.SEQUENCE_NAME));
+        newAssociadoVoto.setSessaoId(sessao.getId());
+        newAssociadoVoto.setAssociadoId(associado.getId());
         newAssociadoVoto.setVoto(String.valueOf(votoDTO.getVoto()));
         return newAssociadoVoto;
-    }*/
+    }
 
     private Pauta toModel(PautaSessaoNewDTO pautaDTO) throws ObjectNotFoundException {
         Pauta pauta = new Pauta();

@@ -1,8 +1,11 @@
 package com.assembleia.votacao.resources;
 
+import com.assembleia.votacao.domain.AssociadoVoto;
 import com.assembleia.votacao.domain.Pauta;
 import com.assembleia.votacao.dto.PautaResultadoDTO;
 import com.assembleia.votacao.dto.PautaSessaoNewDTO;
+import com.assembleia.votacao.dto.VotoDTO;
+import com.assembleia.votacao.exceptions.DenyVoteException;
 import com.assembleia.votacao.exceptions.ObjectNotFoundException;
 import com.assembleia.votacao.services.PautaService;
 import lombok.AllArgsConstructor;
@@ -26,6 +29,7 @@ public class PautaResource {
         PautaResultadoDTO pautaResultadoDTO = pautaService.find(id);
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Type", "application/json");
+        System.out.println(pautaResultadoDTO);
         return ResponseEntity.ok().headers(headers).body(pautaResultadoDTO);
     }
 
@@ -37,11 +41,11 @@ public class PautaResource {
         return ResponseEntity.created(uri).build();
     }
 
-    /*@RequestMapping(value = "/computarvoto", method = RequestMethod.POST)
+    @RequestMapping(value = "/computarvoto", method = RequestMethod.POST)
     public ResponseEntity<Void> computar(@Valid @RequestBody VotoDTO votoDTO) throws DenyVoteException, ObjectNotFoundException {
         AssociadoVoto associadoVoto = pautaService.computarVoto(votoDTO);
         URI uri = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}").buildAndExpand(associadoVoto.getId()).toUri();
         return ResponseEntity.created(uri).build();
-    }*/
+    }
 }

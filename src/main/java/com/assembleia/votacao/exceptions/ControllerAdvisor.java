@@ -54,7 +54,7 @@ public class ControllerAdvisor extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(err);
     }
 
-    @ExceptionHandler(Exception.class)
+    /*@ExceptionHandler(Exception.class)
     public ResponseEntity<Object> handleInternalServerError(Exception e,
                                                             HttpServletRequest request, HttpServletResponse response) {
         if (e instanceof NullPointerException) {
@@ -66,5 +66,5 @@ public class ControllerAdvisor extends ResponseEntityExceptionHandler {
         body.put("message", "500: Internal Server Error");
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
-    }
+    }*/
 }
