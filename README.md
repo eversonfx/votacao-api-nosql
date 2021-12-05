@@ -1,5 +1,5 @@
-<h1 align="center"> Votação API REST 📊</h1>
-<p align="center">Aplicação REST para votação em Assembléia</p>
+<h1 align="center"> Votação API REST Springboot com MongoDB📊</h1>
+<p align="center">Aplicação REST NoSQL com Java, SpringBoot e MongoDB para votação em Assembléia</p>
 
 
 
@@ -17,12 +17,14 @@
 
 
 
-## ⚙️ Technologies & Tool
+## ⚙️ Principais Tecnologias e Ferramentas
 
 - Java 11
 - SpringBoot v2.6.0
-- MariaDB v10.4.18
+- MongoDB 5.0.4
 - Gradle
+- Log4j2
+- Lombock
 
 
 ## :bookmark_tabs: Instruções
@@ -65,7 +67,8 @@ Obs: a sessão é aberta automaticamente, se o tempo não for passado ela ficar�
 ```
 http://localhost:8080/api/pauta/1
 ```
+Para a realização dos Testes rodar o arquivo "PautaResourceTest" localizado em: "main/src/test/java/com/assembleia/votacao/resources/PautaResourceTest.java"
 
 ![Spring](https://img.shields.io/badge/spring-%236DB33F.svg?style=for-the-badge&logo=spring&logoColor=white)
 ![Java](https://img.shields.io/badge/java-%23ED8B00.svg?style=for-the-badge&logo=java&logoColor=white)
-![MySQL](https://img.shields.io/badge/mysql-%2300f.svg?style=for-the-badge&logo=mysql&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-4EA94B?style=for-the-badge&logo=mongodb&logoColor=white)
