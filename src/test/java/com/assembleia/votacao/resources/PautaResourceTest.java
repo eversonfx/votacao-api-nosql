@@ -1,9 +1,7 @@
 package com.assembleia.votacao.resources;
 
 import com.assembleia.votacao.domain.Pauta;
-import com.assembleia.votacao.repositories.AssociadoRepository;
 import com.assembleia.votacao.repositories.PautaRepository;
-import com.assembleia.votacao.repositories.SessaoRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

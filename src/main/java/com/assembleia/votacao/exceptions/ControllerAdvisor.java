@@ -1,5 +1,6 @@
 package com.assembleia.votacao.exceptions;
 
+import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,16 +17,18 @@ import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+@Log4j2
 @ControllerAdvice
 public class ControllerAdvisor extends ResponseEntityExceptionHandler {
     @ExceptionHandler(ObjectNotFoundException.class)
-    public ResponseEntity<Object> handlePautaNotFoundException(
+    public ResponseEntity<Object> handleNotFoundException(
             ObjectNotFoundException ex, WebRequest request) {
 
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("timestamp", LocalDateTime.now());
         body.put("message", ex.getMessage());
 
+        log.warn("Objeto nao encontrado");
         return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
     }
 
@@ -37,6 +40,7 @@ public class ControllerAdvisor extends ResponseEntityExceptionHandler {
         body.put("timestamp", LocalDateTime.now());
         body.put("message", ex.getMessage());
 
+        log.info("Voto negado!");
         return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
     }
 
@@ -51,10 +55,11 @@ public class ControllerAdvisor extends ResponseEntityExceptionHandler {
         for (FieldError x : e.getBindingResult().getFieldErrors()) {
             err.addError(x.getField(), x.getDefaultMessage());
         }
+        log.error("Erro: Argumento(s) inválidos");
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(err);
     }
 
-    /*@ExceptionHandler(Exception.class)
+    @ExceptionHandler(Exception.class)
     public ResponseEntity<Object> handleInternalServerError(Exception e,
                                                             HttpServletRequest request, HttpServletResponse response) {
         if (e instanceof NullPointerException) {
@@ -65,6 +70,7 @@ public class ControllerAdvisor extends ResponseEntityExceptionHandler {
         body.put("timestamp", LocalDateTime.now());
         body.put("message", "500: Internal Server Error");
 
+        log.error("Erro interno " + e.getMessage());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
-    }*/
+    }
 }

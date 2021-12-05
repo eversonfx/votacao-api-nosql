@@ -14,7 +14,9 @@ import com.assembleia.votacao.repositories.AssociadoRepository;
 import com.assembleia.votacao.repositories.AssociadoVotoRepository;
 import com.assembleia.votacao.repositories.PautaRepository;
 import com.assembleia.votacao.repositories.SessaoRepository;
+import com.assembleia.votacao.utils.LoggingComponent;
 import lombok.AllArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 
+@Log4j2
 @Component
 @Service
 @AllArgsConstructor(onConstructor = @__(@Autowired))
@@ -34,6 +37,7 @@ public class PautaService {
     private AssociadoVotoRepository assoVotoRepo;
     private SessaoRepository sessaoRepo;
     private SequenceGeneratorService sequenceGenerator;
+    private LoggingComponent loggingComponent;
 
     public PautaResultadoDTO find(Long id) throws ObjectNotFoundException {
         Pauta pauta;
@@ -125,6 +129,8 @@ public class PautaService {
     }
 
     private boolean checkCPF(String cpf) {
+        log.info("Checando CPF: " + cpf + " em API externa");
+
         String url = "https://user-info.herokuapp.com/users/" + cpf.replace(".", "").replace("-", "").trim().substring(0, 11);
         RestTemplate restTemplate = new RestTemplate();
         ResponseCheckCPFDTO objResponse;
