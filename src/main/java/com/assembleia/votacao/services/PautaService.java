@@ -16,15 +16,16 @@ import com.assembleia.votacao.repositories.PautaRepository;
 import com.assembleia.votacao.repositories.SessaoRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
-import javax.validation.constraints.Null;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 
+@Component
 @Service
 @AllArgsConstructor(onConstructor = @__(@Autowired))
 public class PautaService {

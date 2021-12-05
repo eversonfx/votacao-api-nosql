@@ -1,49 +1,84 @@
 package com.assembleia.votacao.resources;
 
-import com.assembleia.votacao.dto.PautaSessaoNewDTO;
-import com.assembleia.votacao.exceptions.ObjectNotFoundException;
-import com.assembleia.votacao.services.PautaService;
-import org.junit.Before;
+import com.assembleia.votacao.domain.Pauta;
+import com.assembleia.votacao.repositories.AssociadoRepository;
+import com.assembleia.votacao.repositories.PautaRepository;
+import com.assembleia.votacao.repositories.SessaoRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import java.util.HashMap;
+import java.util.Map;
+
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
 
-@RunWith(SpringRunner.class)
-@WebMvcTest(PautaResource.class)
+@AutoConfigureMockMvc
+@SpringBootTest
 class PautaResourceTest {
     @Autowired
-    private PautaResource pautaResource;
+    PautaRepository pautaRepository;
 
     @Autowired
-    private MockMvc mockMvc;
+    MockMvc mockMvc;
 
-    @MockBean
-    private PautaService pautaService;
+    @Autowired
+    ObjectMapper objectMapper;
 
-    @Before
-    public void setUp() throws ObjectNotFoundException {
-        mockMvc = standaloneSetup(pautaResource).build();
-        PautaSessaoNewDTO pautaSessaoNew = new PautaSessaoNewDTO("Pauta 67867", "Criação de uma ponte sobre o rio", "00:12:23");
-        pautaService.insert(pautaSessaoNew);
+
+    @BeforeEach
+    public void setUp() {
+        Pauta pauta = new Pauta(1L, "Centro Comunitário", "Criação de um centro comunitário na cidade");
+        pautaRepository.save(pauta);
     }
 
     @Test
-    void getPautaResultado() throws Exception {
+    public void deve_criar_pauta_sessao() throws Exception {
+        Map<String, Object> body = new HashMap<>();
+        body.put("titulo", "Nova Pauta");
+        body.put("descricao", "Criação de nova pauta");
+        body.put("tempoDuracao", "23:42:23");
+
+        MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders.post("/api/pauta")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(body));
+
+        mockMvc.perform(mockRequest)
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    void deve_retornar_status_json_e_status_ok() throws Exception {
         mockMvc.perform(
-                get("/api/pauta/1")
+                MockMvcRequestBuilders.get("/api/pauta/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("Content-Type", "application/json"))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON));
+    }
+
+    @Test
+    public void nao_deve_computar_voto_associado_inexistente() throws Exception {
+        Map<String, Object> body = new HashMap<>();
+        body.put("associadoCPF", "595.712.190-88");
+        body.put("pautaId", "1");
+        body.put("voto", "1");
+
+        MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders.post("/computarvoto")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(body));
+
+        mockMvc.perform(mockRequest)
+                .andExpect(status().isNotFound());
     }
 }
